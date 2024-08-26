@@ -32,11 +32,11 @@ RUN mkdir -p /app/cache && chown -R 1000:1000 /app/cache
 # Ensure the lmss directory and files have the correct permissions
 RUN mkdir -p /app/app/lmss && chown -R 1000:1000 /app/app/lmss
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+# Make ports 8000 and 8001 available to the world outside this container
+EXPOSE 8000 8001
 
 # Define environment variable
 ENV NAME=LMSS_Entity_Recognizer
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run both the main API and local API
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 & uvicorn app.local_api:app --host 0.0.0.0 --port 8001"]
