@@ -18,6 +18,7 @@ from app.lmss_parser import OntologyParser
 from app.entity_extraction import EntityExtractor, ExtractedEntity
 from app.lmss_classification import OntologyClassifier
 from app.lmss_search import LMSSSearch
+from app.local_api import app as local_api_app
 
 app = FastAPI()
 
@@ -289,6 +290,8 @@ async def search_lmss(query: str, class_filter: Optional[str] = None):
         logger.error(f"Error during search: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error during search: {str(e)}")
 
+
+app.mount("/local", local_api_app)
 
 if __name__ == "__main__":
     import uvicorn

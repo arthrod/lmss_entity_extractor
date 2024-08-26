@@ -1,38 +1,33 @@
 import json
 import logging
-import argparse
-from pathlib import Path
-from app.entity_extraction import EntityExtractor, ExtractedEntity
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from typing import List
+from app.entity_extraction import EntityExtractor, ExtractedEntity
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+extractor = EntityExtractor()
 
-def save_results(data: List[ExtractedEntity], file_path: str):
-    logger.info(f"Saving results to {file_path}")
-    with open(file_path, "w") as f:
-        json.dump([entity.dict() for entity in data], f, indent=2)
+class DocumentInput(BaseModel):
+    text: str
 
+class EntityOutput(BaseModel):
+    text: str
+    start: int
+    end: int
+    type: str
+    label: str = None
+    confidence: float = None
+    source: str = None
 
-def process_text(text: str, extractor: EntityExtractor) -> List[ExtractedEntity]:
+def process_text(text: str) -> List[EntityOutput]:
     logger.info("Extracting entities")
     extracted_entities = extractor.extract_entities(text)
-    return extracted_entities
+    return [EntityOutput(**entity.dict()) for entity in extracted_entities]
 
-
-def print_summary(entities: List[ExtractedEntity]):
-    print("\nExtraction Summary:")
-    print(f"Total entities extracted: {len(entities)}")
-
-    print("\nSample Extracted Entities:")
-    for entity in entities[:5]:  # Print first 5 entities
-        print(f"- {entity.text} ({entity.type})")
-
-
-def calculate_statistics(entities: List[ExtractedEntity]) -> dict:
+def calculate_statistics(entities: List[EntityOutput]) -> dict:
     stats = {
         "total_entities": len(entities),
         "entity_types": {},
@@ -44,7 +39,6 @@ def calculate_statistics(entities: List[ExtractedEntity]) -> dict:
         stats["entity_types"][entity.type] += 1
 
     return stats
-
 
 def main():
     parser = argparse.ArgumentParser(description="Extract entities from text")
@@ -63,8 +57,6 @@ def main():
     )
     args = parser.parse_args()
 
-    extractor = EntityExtractor()
-
     if args.input:
         with open(args.input, "r") as f:
             text = f.read()
@@ -76,7 +68,7 @@ def main():
         on a high-profile case involving software licensing and open source compliance in Paris, Texas.
         """
 
-    results = process_text(text, extractor)
+    results = process_text(text)
     save_results(results, args.output)
     print_summary(results)
 
@@ -87,7 +79,6 @@ def main():
 
     logger.info(f"Full results saved to {args.output}")
     logger.info(f"Statistics saved to {args.stats}")
-
 
 if __name__ == "__main__":
     main()
