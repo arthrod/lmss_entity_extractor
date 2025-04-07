@@ -16,3 +16,4 @@ nltk
 
 PyPDF2
 python-docx
+security==1.3.1
