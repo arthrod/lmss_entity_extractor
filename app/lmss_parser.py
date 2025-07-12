@@ -1,12 +1,12 @@
 import os
 import json
 import hashlib
-import requests
 from rdflib import Graph, URIRef, Literal, Namespace, BNode
 from rdflib.namespace import RDF, RDFS, OWL, SKOS, DC
 from sentence_transformers import SentenceTransformer
 from typing import Dict, List
 import logging
+from security import safe_requests
 
 
 class OntologyParser:
@@ -26,7 +26,7 @@ class OntologyParser:
         raw_url = url.replace("github.com", "raw.githubusercontent.com").replace(
             "/blob/", "/"
         )
-        response = requests.get(raw_url)
+        response = safe_requests.get(raw_url)
         if response.status_code == 200:
             with open(save_path, "wb") as file:
                 file.write(response.content)
